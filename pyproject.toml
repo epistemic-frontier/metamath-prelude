@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metamath-prelude"
+version = "0.0.1"
+description = "Prelude definitions for Metamath projects"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-2.0-or-later"
+
+authors = [
+  { name = "Mingli Yuan" }
+]
+
+dependencies = [
+    "proof-scaffold",
+]
+
+[tool.uv.sources]
+proof-scaffold = { path = "../proof-scaffold", editable = true }
+
+[tool.setuptools.packages.find]
+where = ["src"]
