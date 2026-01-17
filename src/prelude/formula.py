@@ -28,6 +28,12 @@ class Builtins:
     imp: SymbolId    # "->"
     neg: SymbolId    # "~"
     and_: SymbolId   # "/\\"
+    forall: SymbolId # "A."
+    eq: SymbolId     # "="
+    elem: SymbolId   # "e."
+    iff: SymbolId    # "<->"
+    exist: SymbolId  # "E."
+    or_: SymbolId    # "\/"
 
     @staticmethod
     def ensure(
@@ -57,7 +63,25 @@ class Builtins:
         and_ = interner.intern(
             origin_module_id=origin_module_id, local_name="/\\", kind="Const", origin_ref=origin_ref
         )
-        return Builtins(lp=lp, rp=rp, imp=imp, neg=neg, and_=and_)
+        forall = interner.intern(
+            origin_module_id=origin_module_id, local_name="A.", kind="Const", origin_ref=origin_ref
+        )
+        eq = interner.intern(
+            origin_module_id=origin_module_id, local_name="=", kind="Const", origin_ref=origin_ref
+        )
+        elem = interner.intern(
+            origin_module_id=origin_module_id, local_name="e.", kind="Const", origin_ref=origin_ref
+        )
+        iff = interner.intern(
+            origin_module_id=origin_module_id, local_name="<->", kind="Const", origin_ref=origin_ref
+        )
+        exist = interner.intern(
+            origin_module_id=origin_module_id, local_name="E.", kind="Const", origin_ref=origin_ref
+        )
+        or_ = interner.intern(
+            origin_module_id=origin_module_id, local_name="\\/", kind="Const", origin_ref=origin_ref
+        )
+        return Builtins(lp=lp, rp=rp, imp=imp, neg=neg, and_=and_, forall=forall, eq=eq, elem=elem, iff=iff, exist=exist, or_=or_)
 
 
 # -----------------------------------------------------------------------------
@@ -83,6 +107,34 @@ def wa(b: Builtins, phi: Wff, psi: Wff) -> Wff:
     """Construct ( phi /\ psi )."""
     return Wff("wff", (b.lp, *phi.tokens, b.and_, *psi.tokens, b.rp))
 
+
+def wo(b: Builtins, phi: Wff, psi: Wff) -> Wff:
+    """Construct ( phi \/ psi )."""
+    return Wff("wff", (b.lp, *phi.tokens, b.or_, *psi.tokens, b.rp))
+
+
+def wb(b: Builtins, phi: Wff, psi: Wff) -> Wff:
+    """Construct ( phi <-> psi )."""
+    return Wff("wff", (b.lp, *phi.tokens, b.iff, *psi.tokens, b.rp))
+
+def forall(b: Builtins, phi: Wff) -> Wff:
+    """Construct A. phi (legacy unary forall used during scaffolding)."""
+    return Wff("wff", (b.forall, *phi.tokens))
+
+def forall2(b: Builtins, x: Wff, phi: Wff) -> Wff:
+    """Construct A. x phi (binary forall with explicit variable token)."""
+    return Wff("wff", (b.forall, *x.tokens, *phi.tokens))
+
+
+def exist(b: Builtins, x: Wff, phi: Wff) -> Wff:
+    """Construct E. x phi."""
+    return Wff("wff", (b.exist, *x.tokens, *phi.tokens))
+
+def eq(b: Builtins, x: Wff, y: Wff) -> Wff:
+    return Wff("wff", (*x.tokens, b.eq, *y.tokens))
+
+def elem(b: Builtins, x: Wff, z: Wff) -> Wff:
+    return Wff("wff", (*x.tokens, b.elem, *z.tokens))
 
 # -----------------------------------------------------------------------------
 # Shape matching for implication
@@ -190,6 +242,42 @@ def try_parse_wa(b: Builtins, tokens: Sequence[SymbolId]) -> AndShape | None:
     return AndShape(left=left, right=right)
 
 
+@dataclass(frozen=True)
+class ForallUnaryShape:
+    body: TokenSeq
+
+
+def try_parse_forall(b: Builtins, tokens: Sequence[SymbolId]) -> ForallUnaryShape | None:
+    """Parse tokens as A. <phi> (unary form used during scaffolding)."""
+    toks = tuple(tokens)
+    if len(toks) < 2:
+        return None
+    if toks[0] != b.forall:
+        return None
+    return ForallUnaryShape(body=toks[1:])
+
+
+@dataclass(frozen=True)
+class Forall2Shape:
+    var: SymbolId
+    body: TokenSeq
+
+
+def try_parse_forall2(b: Builtins, tokens: Sequence[SymbolId]) -> Forall2Shape | None:
+    """Parse tokens as A. x <phi> (binary form with explicit variable token).
+    Assumes x is a single-token variable (current authoring compile emits one token).
+    """
+    toks = tuple(tokens)
+    if len(toks) < 3:
+        return None
+    if toks[0] != b.forall:
+        return None
+    x = toks[1]
+    body = toks[2:]
+    if not body:
+        return None
+    return Forall2Shape(var=x, body=body)
+
 __all__ = [
     "GLOBAL_PRELUDE_MODULE_ID",
     "Builtins",
@@ -197,10 +285,20 @@ __all__ = [
     "imp",
     "wn",
     "wa",
+    "wo",
+    "forall",
+    "forall2",
+    "forall2",
+    "eq",
+    "elem",
     "ImpShape",
     "try_parse_imp",
     "NegShape",
     "try_parse_wn",
     "AndShape",
+    "ForallUnaryShape",
+    "try_parse_forall",
+    "Forall2Shape",
+    "try_parse_forall2",
     "try_parse_wa",
 ]
