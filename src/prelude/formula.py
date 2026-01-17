@@ -52,7 +52,7 @@ class Builtins:
             origin_module_id=origin_module_id, local_name="->", kind="Const", origin_ref=origin_ref
         )
         neg = interner.intern(
-            origin_module_id=origin_module_id, local_name="~", kind="Const", origin_ref=origin_ref
+            origin_module_id=origin_module_id, local_name="-.", kind="Const", origin_ref=origin_ref
         )
         and_ = interner.intern(
             origin_module_id=origin_module_id, local_name="/\\", kind="Const", origin_ref=origin_ref
