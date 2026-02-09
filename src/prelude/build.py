@@ -3,10 +3,6 @@ from __future__ import annotations
 from skfd.api_v2 import BuildContextV2
 
 
-def manifest() -> dict[str, list[str]]:
-    return {"deps": []}
-
-
 def build(ctx: BuildContextV2) -> None:
     mm = ctx.mm
 
