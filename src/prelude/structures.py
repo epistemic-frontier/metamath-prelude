@@ -15,27 +15,27 @@ th = Var("θ")
 ta = Var("τ")
 
 
-@symbol("→", 2, (WFF, WFF), WFF, op="rshift", precedence=20, assoc="right", aliases=["->"])
+@symbol("->", 2, (WFF, WFF), WFF, op="rshift", precedence=20, assoc="right", aliases=["→", "⇒"])
 def Imp(b: Builtins, args: Sequence[Wff]) -> Wff:
     return imp(b, args[0], args[1])
 
 
-@symbol("¬", 1, (WFF,), WFF, op="invert", precedence=30, assoc="right", aliases=["-.", "~"])
+@symbol("-.", 1, (WFF,), WFF, op="invert", precedence=30, assoc="right", aliases=["¬", "~"])
 def Not(b: Builtins, args: Sequence[Wff]) -> Wff:
     return wn(b, args[0])
 
 
-@symbol("∧", 2, (WFF, WFF), WFF, op="and", precedence=25, assoc="left", aliases=["/\\", "&"])
+@symbol("/\\", 2, (WFF, WFF), WFF, op="and", precedence=25, assoc="left", aliases=["∧", "&"])
 def And(b: Builtins, args: Sequence[Wff]) -> Wff:
     return wa(b, args[0], args[1])
 
 
-@symbol("∨", 2, (WFF, WFF), WFF, op="or", precedence=24, assoc="left", aliases=["\\/", "|"])
+@symbol("\\/", 2, (WFF, WFF), WFF, op="or", precedence=24, assoc="left", aliases=["∨", "|"])
 def Or(b: Builtins, args: Sequence[Wff]) -> Wff:
     return wo(b, args[0], args[1])
 
 
-@symbol("↔", 2, (WFF, WFF), WFF, precedence=10, assoc="right", aliases=["<->"])
+@symbol("<->", 2, (WFF, WFF), WFF, precedence=10, assoc="right", aliases=["↔"])
 def Iff(b: Builtins, args: Sequence[Wff]) -> Wff:
     return wb(b, args[0], args[1])
 

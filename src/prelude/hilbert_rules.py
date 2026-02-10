@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import TypeAlias, cast
 
 from prelude.formula import Builtins, imp, try_parse_imp, wa, wn
 from skfd.authoring.formula import Wff
@@ -100,7 +100,7 @@ def make_rules(b: Builtins) -> RuleBundle:
 
 DEBUG_CATALOG = build_rule_catalog(REGISTRY, bind=lambda cls: cls())
 
-DEBUG_RULES: Mapping[str, RuleFn] = rules_view(DEBUG_CATALOG)  # type: ignore[assignment]
+DEBUG_RULES: Mapping[str, RuleFn] = cast(Mapping[str, RuleFn], rules_view(DEBUG_CATALOG))
 
 
 __all__ = [
