@@ -26,7 +26,7 @@ class Builtins:
     lp: SymbolId     # "("
     rp: SymbolId     # ")"
     imp: SymbolId    # "->"
-    neg: SymbolId    # "~"
+    neg: SymbolId    # "-."
     and_: SymbolId   # "/\\"
     forall: SymbolId # "A."
     eq: SymbolId     # "="
@@ -104,12 +104,12 @@ def wn(b: Builtins, phi: Wff) -> Wff:
 
 
 def wa(b: Builtins, phi: Wff, psi: Wff) -> Wff:
-    """Construct ( phi /\ psi )."""
+    r"""Construct ( phi /\ psi )."""
     return Wff("wff", (b.lp, *phi.tokens, b.and_, *psi.tokens, b.rp))
 
 
 def wo(b: Builtins, phi: Wff, psi: Wff) -> Wff:
-    """Construct ( phi \/ psi )."""
+    r"""Construct ( phi \/ psi )."""
     return Wff("wff", (b.lp, *phi.tokens, b.or_, *psi.tokens, b.rp))
 
 
@@ -117,13 +117,10 @@ def wb(b: Builtins, phi: Wff, psi: Wff) -> Wff:
     """Construct ( phi <-> psi )."""
     return Wff("wff", (b.lp, *phi.tokens, b.iff, *psi.tokens, b.rp))
 
-def forall(b: Builtins, phi: Wff) -> Wff:
-    """Construct A. phi (legacy unary forall used during scaffolding)."""
-    return Wff("wff", (b.forall, *phi.tokens))
-
 def forall2(b: Builtins, x: Wff, phi: Wff) -> Wff:
     """Construct A. x phi (binary forall with explicit variable token)."""
     return Wff("wff", (b.forall, *x.tokens, *phi.tokens))
+
 
 
 def exist(b: Builtins, x: Wff, phi: Wff) -> Wff:
@@ -243,21 +240,6 @@ def try_parse_wa(b: Builtins, tokens: Sequence[SymbolId]) -> AndShape | None:
 
 
 @dataclass(frozen=True)
-class ForallUnaryShape:
-    body: TokenSeq
-
-
-def try_parse_forall(b: Builtins, tokens: Sequence[SymbolId]) -> ForallUnaryShape | None:
-    """Parse tokens as A. <phi> (unary form used during scaffolding)."""
-    toks = tuple(tokens)
-    if len(toks) < 2:
-        return None
-    if toks[0] != b.forall:
-        return None
-    return ForallUnaryShape(body=toks[1:])
-
-
-@dataclass(frozen=True)
 class Forall2Shape:
     var: SymbolId
     body: TokenSeq
@@ -286,19 +268,7 @@ __all__ = [
     "wn",
     "wa",
     "wo",
-    "forall",
-    "forall2",
     "forall2",
     "eq",
     "elem",
-    "ImpShape",
-    "try_parse_imp",
-    "NegShape",
-    "try_parse_wn",
-    "AndShape",
-    "ForallUnaryShape",
-    "try_parse_forall",
-    "Forall2Shape",
-    "try_parse_forall2",
-    "try_parse_wa",
 ]
