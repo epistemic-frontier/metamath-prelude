@@ -18,9 +18,6 @@ dependencies = [
     "proof-scaffold",
 ]
 
-[tool.uv.sources]
-proof-scaffold = { path = "../proof-scaffold", editable = true }
-
 [tool.setuptools.packages.find]
 where = ["src"]
 

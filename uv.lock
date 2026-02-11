@@ -11,19 +11,13 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "proof-scaffold", editable = "../proof-scaffold" }]
+requires-dist = [{ name = "proof-scaffold" }]
 
 [[package]]
 name = "proof-scaffold"
 version = "0.0.3"
-source = { editable = "../proof-scaffold" }
-
-[package.metadata]
-requires-dist = [
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.5.7" },
-    { name = "types-setuptools", marker = "extra == 'dev'" },
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/75/3d/a76e139199278d0e4325dc44742f6164f3e9ba78e646aa1dbf974deb5389/proof_scaffold-0.0.3.tar.gz", hash = "sha256:74a996822b5874d71c5238813fa65c037f752c68343262f1eb9d1cfaf3e8eb0f", size = 86127, upload-time = "2026-02-10T14:11:13.636Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/92/89a1f4fe8a18d578a981abda5024c9620e09e0b6e4bcc7e51133926bdbf1/proof_scaffold-0.0.3-py3-none-any.whl", hash = "sha256:d508b332057ad5d9ba1fb93fe0251c3ffd7f071b02988de0bbb4411a1562c83b", size = 98319, upload-time = "2026-02-10T14:11:14.872Z" },
 ]
-provides-extras = ["dev"]
