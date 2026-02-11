@@ -5,8 +5,8 @@ It provides the core constants, variables, and a minimal set of foundational sta
 
 ## Versioning
 
-- Package version: `0.0.1`
-- ProofScaffold dependency: `proof-scaffold==0.0.4`
+- Package version: `0.0.2`
+- ProofScaffold dependency: `proof-scaffold==0.0.5`
 
 ## Installation
 

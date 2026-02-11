@@ -107,7 +107,7 @@ wheels = [
 
 [[package]]
 name = "metamath-prelude"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "proof-scaffold" },
@@ -121,7 +121,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "proof-scaffold", specifier = "==0.0.4" }]
+requires-dist = [{ name = "proof-scaffold", specifier = "==0.0.5" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -214,11 +214,11 @@ wheels = [
 
 [[package]]
 name = "proof-scaffold"
-version = "0.0.4"
+version = "0.0.5"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8d/9f/d86c88c3200bef085d0f97d2d15d561779c463553773b56c44c3409e3fe1/proof_scaffold-0.0.4.tar.gz", hash = "sha256:e1821ef1b63fc432a26f8637b329f97dc847eb31ad4bf5f48c9f2e0824ec2dea", size = 89595, upload-time = "2026-02-11T17:38:53.776Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/d6/cba2aa5298bf331be1c6b8728f71329faee7e6fda5753c7b0a4fa5352283/proof_scaffold-0.0.5.tar.gz", hash = "sha256:79713ad3ccbd96804e7ee9401c0c03b9e00f5a2307952f19f6d771d8710807ba", size = 90079, upload-time = "2026-02-11T19:40:35.166Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/3b/e6a87b17c766650f6db612325c606a2eeff54928b21b13bc95c717fd7d79/proof_scaffold-0.0.4-py3-none-any.whl", hash = "sha256:fb19f469f68a7c3ad03eda909f58038d14df393c830d9af7730691c3c0a09238", size = 102642, upload-time = "2026-02-11T17:38:51.888Z" },
+    { url = "https://files.pythonhosted.org/packages/74/aa/7c4caa6cb18c13f21454e88df82243a668141f0fb7d56791653da2177e31/proof_scaffold-0.0.5-py3-none-any.whl", hash = "sha256:f1c487c0ca743b151c664091fa0ee30979adb1d01fd0aac7c1bad43b37509314", size = 103296, upload-time = "2026-02-11T19:40:32.816Z" },
 ]
 
 [[package]]
