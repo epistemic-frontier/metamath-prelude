@@ -118,21 +118,24 @@ def wb(b: Builtins, phi: Wff, psi: Wff) -> Wff:
     """Construct ( phi <-> psi )."""
     return Wff("wff", (b.lp, *phi.tokens, b.iff, *psi.tokens, b.rp))
 
+
 def forall2(b: Builtins, x: Wff, phi: Wff) -> Wff:
     """Construct A. x phi (binary forall with explicit variable token)."""
     return Wff("wff", (b.forall, *x.tokens, *phi.tokens))
-
 
 
 def exist(b: Builtins, x: Wff, phi: Wff) -> Wff:
     """Construct E. x phi."""
     return Wff("wff", (b.exist, *x.tokens, *phi.tokens))
 
+
 def eq(b: Builtins, x: Wff, y: Wff) -> Wff:
     return Wff("wff", (*x.tokens, b.eq, *y.tokens))
 
+
 def elem(b: Builtins, x: Wff, z: Wff) -> Wff:
     return Wff("wff", (*x.tokens, b.elem, *z.tokens))
+
 
 # -----------------------------------------------------------------------------
 # Shape matching for implication
