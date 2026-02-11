@@ -15,7 +15,7 @@ requires-dist = [{ name = "proof-scaffold", editable = "../proof-scaffold" }]
 
 [[package]]
 name = "proof-scaffold"
-version = "0.0.1"
+version = "0.0.3"
 source = { editable = "../proof-scaffold" }
 
 [package.metadata]

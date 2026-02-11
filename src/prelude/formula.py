@@ -8,6 +8,7 @@ from typing import (
 )
 
 from skfd.authoring.formula import TokenSeq, Wff
+from skfd.core.peg import Rule, TokenStream
 from skfd.core.symbols import SymbolId, SymbolInterner
 
 # -----------------------------------------------------------------------------
@@ -143,49 +144,140 @@ class ImpShape:
     psi: TokenSeq
 
 
-def try_parse_imp(b: Builtins, tokens: Sequence[SymbolId]) -> ImpShape | None:
-    """Parse tokens as ( phi -> psi ) with parenthesis balancing.
+@dataclass(frozen=True)
+class _Tok:
+    type: str
+    value: SymbolId
+    pos: int
 
-    Accepts only the outermost form:
-      '('  <phi>  '->'  <psi>  ')'
-    where <phi> and <psi> are non-empty token sequences.
-    """
-    toks: TokenSeq = tuple(tokens)
 
-    if len(toks) < 5:
-        return None
-    if toks[0] != b.lp or toks[-1] != b.rp:
-        return None
-
-    inner = toks[1:-1]
-    if not inner:
-        return None
-
-    # Find the top-level '->' in inner: balance parentheses.
-    depth = 0
-    split_at: int | None = None
-
-    for i, t in enumerate(inner):
+def _peg_tokenize(b: Builtins, tokens: Sequence[SymbolId]) -> list[_Tok]:
+    out: list[_Tok] = []
+    for i, t in enumerate(tokens):
         if t == b.lp:
-            depth += 1
+            out.append(_Tok("LPAREN", t, i))
         elif t == b.rp:
-            depth -= 1
-            if depth < 0:
+            out.append(_Tok("RPAREN", t, i))
+        else:
+            out.append(_Tok("SYM", t, i))
+    out.append(_Tok("EOF", -1, len(tokens)))
+    return out
+
+
+def _peg_bal(
+    b: Builtins,
+) -> tuple[Rule[TokenSeq], Rule[TokenSeq]]:
+    def sym_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
+        tok = s.peek(i)
+        if tok.type != "SYM":
+            return None
+        return (tok.value,), i + 1
+
+    sym = Rule("bal.sym", sym_fn)
+
+    def group_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
+        tok = s.peek(i)
+        if tok.type != "LPAREN":
+            return None
+        inner_out = bal(s, i + 1)
+        if inner_out is None:
+            return None
+        inner, j = inner_out
+        close = s.peek(j)
+        if close.type != "RPAREN":
+            return None
+        return (b.lp, *inner, b.rp), j + 1
+
+    group = Rule("bal.group", group_fn)
+
+    def bal_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
+        acc: list[SymbolId] = []
+        j = i
+        while True:
+            tok = s.peek(j)
+            if tok.type in ("RPAREN", "EOF"):
+                break
+            part: tuple[TokenSeq, int] | None
+            if tok.type == "LPAREN":
+                part = group(s, j)
+            else:
+                part = sym(s, j)
+            if part is None:
                 return None
-        elif t == b.imp and depth == 0:
-            split_at = i
-            break
+            frag, j = part
+            acc.extend(frag)
+        return tuple(acc), j
 
-    if depth != 0:
-        return None
-    if split_at is None:
-        return None
+    bal = Rule("bal", bal_fn)
+    return bal, group
 
-    left = inner[:split_at]
-    right = inner[split_at + 1 :]
-    if not left or not right:
-        return None
 
+def _peg_try_parse_split_binary(
+    b: Builtins, tokens: Sequence[SymbolId], *, op: SymbolId
+) -> tuple[TokenSeq, TokenSeq] | None:
+    ts = TokenStream(text="", tokens=_peg_tokenize(b, tokens))
+    bal, group = _peg_bal(b)
+
+    def sym_any_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
+        tok = s.peek(i)
+        if tok.type != "SYM":
+            return None
+        return (tok.value,), i + 1
+
+    sym_any = Rule("bal_no_op.sym", sym_any_fn)
+
+    def bal_no_op_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
+        acc: list[SymbolId] = []
+        j = i
+        while True:
+            tok = s.peek(j)
+            if tok.type in ("RPAREN", "EOF"):
+                break
+            if tok.type == "SYM" and tok.value == op:
+                break
+            part: tuple[TokenSeq, int] | None
+            if tok.type == "LPAREN":
+                part = group(s, j)
+            else:
+                part = sym_any(s, j)
+            if part is None:
+                return None
+            frag, j = part
+            acc.extend(frag)
+        return tuple(acc), j
+
+    bal_no_op = Rule("bal_no_op", bal_no_op_fn)
+
+    i = 0
+    if ts.peek(i).type != "LPAREN":
+        return None
+    left_out = bal_no_op(ts, i + 1)
+    if left_out is None:
+        return None
+    left, j = left_out
+    if not left:
+        return None
+    mid = ts.peek(j)
+    if mid.type != "SYM" or mid.value != op:
+        return None
+    right_out = bal(ts, j + 1)
+    if right_out is None:
+        return None
+    right, k = right_out
+    if not right:
+        return None
+    if ts.peek(k).type != "RPAREN":
+        return None
+    if ts.peek(k + 1).type != "EOF":
+        return None
+    return left, right
+
+
+def try_parse_imp(b: Builtins, tokens: Sequence[SymbolId]) -> ImpShape | None:
+    parts = _peg_try_parse_split_binary(b, tokens, op=b.imp)
+    if parts is None:
+        return None
+    left, right = parts
     return ImpShape(phi=left, psi=right)
 
 
@@ -196,11 +288,17 @@ class NegShape:
 
 def try_parse_wn(b: Builtins, tokens: Sequence[SymbolId]) -> NegShape | None:
     toks = tuple(tokens)
-    if len(toks) < 2:
+    if len(toks) < 2 or toks[0] != b.neg:
         return None
-    if toks[0] != b.neg:
+    ts = TokenStream(text="", tokens=_peg_tokenize(b, toks[1:]))
+    bal, _ = _peg_bal(b)
+    out = bal(ts, 0)
+    if out is None:
         return None
-    return NegShape(body=toks[1:])
+    body, j = out
+    if not body or ts.peek(j).type != "EOF":
+        return None
+    return NegShape(body=body)
 
 
 @dataclass(frozen=True)
@@ -210,32 +308,10 @@ class AndShape:
 
 
 def try_parse_wa(b: Builtins, tokens: Sequence[SymbolId]) -> AndShape | None:
-    toks = tuple(tokens)
-    if len(toks) < 5:
+    parts = _peg_try_parse_split_binary(b, tokens, op=b.and_)
+    if parts is None:
         return None
-    if toks[0] != b.lp or toks[-1] != b.rp:
-        return None
-
-    inner = toks[1:-1]
-    depth = 0
-    split_at = None
-    for i, t in enumerate(inner):
-        if t == b.lp:
-            depth += 1
-        elif t == b.rp:
-            depth -= 1
-        elif t == b.and_ and depth == 0:
-            split_at = i
-            break
-
-    if split_at is None or depth != 0:
-        return None
-
-    left = inner[:split_at]
-    right = inner[split_at + 1 :]
-    if not left or not right:
-        return None
-
+    left, right = parts
     return AndShape(left=left, right=right)
 
 
@@ -246,17 +322,17 @@ class Forall2Shape:
 
 
 def try_parse_forall2(b: Builtins, tokens: Sequence[SymbolId]) -> Forall2Shape | None:
-    """Parse tokens as A. x <phi> (binary form with explicit variable token).
-    Assumes x is a single-token variable (current authoring compile emits one token).
-    """
     toks = tuple(tokens)
-    if len(toks) < 3:
-        return None
-    if toks[0] != b.forall:
+    if len(toks) < 3 or toks[0] != b.forall:
         return None
     x = toks[1]
-    body = toks[2:]
-    if not body:
+    ts = TokenStream(text="", tokens=_peg_tokenize(b, toks[2:]))
+    bal, _ = _peg_bal(b)
+    out = bal(ts, 0)
+    if out is None:
+        return None
+    body, j = out
+    if not body or ts.peek(j).type != "EOF":
         return None
     return Forall2Shape(var=x, body=body)
 
