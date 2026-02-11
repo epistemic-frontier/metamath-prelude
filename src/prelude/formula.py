@@ -218,7 +218,7 @@ def _peg_bal(
 def _peg_try_parse_split_binary(
     b: Builtins, tokens: Sequence[SymbolId], *, op: SymbolId
 ) -> tuple[TokenSeq, TokenSeq] | None:
-    ts = TokenStream(text="", tokens=_peg_tokenize(b, tokens))
+    ts: TokenStream[TokenSeq] = TokenStream(text="", tokens=_peg_tokenize(b, tokens))
     bal, group = _peg_bal(b)
 
     def sym_any_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
@@ -293,7 +293,7 @@ def try_parse_wn(b: Builtins, tokens: Sequence[SymbolId]) -> NegShape | None:
     toks = tuple(tokens)
     if len(toks) < 2 or toks[0] != b.neg:
         return None
-    ts = TokenStream(text="", tokens=_peg_tokenize(b, toks[1:]))
+    ts: TokenStream[TokenSeq] = TokenStream(text="", tokens=_peg_tokenize(b, toks[1:]))
     bal, _ = _peg_bal(b)
     out = bal(ts, 0)
     if out is None:
@@ -329,7 +329,7 @@ def try_parse_forall2(b: Builtins, tokens: Sequence[SymbolId]) -> Forall2Shape |
     if len(toks) < 3 or toks[0] != b.forall:
         return None
     x = toks[1]
-    ts = TokenStream(text="", tokens=_peg_tokenize(b, toks[2:]))
+    ts: TokenStream[TokenSeq] = TokenStream(text="", tokens=_peg_tokenize(b, toks[2:]))
     bal, _ = _peg_bal(b)
     out = bal(ts, 0)
     if out is None:

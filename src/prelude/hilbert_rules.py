@@ -95,10 +95,16 @@ class Wa:
 
 
 def make_rules(b: Builtins) -> RuleBundle:
-    return build_rule_bundle(REGISTRY, bind=lambda cls: cls(b=b))
+    def _bind(cls: Callable[..., object]) -> Callable[..., object]:
+        return cast(Callable[..., object], cls(b=b))
+
+    return build_rule_bundle(REGISTRY, bind=_bind)
 
 
-DEBUG_CATALOG = build_rule_catalog(REGISTRY, bind=lambda cls: cls())
+def _bind_debug(cls: Callable[..., object]) -> Callable[..., object]:
+    return cast(Callable[..., object], cls())
+
+DEBUG_CATALOG = build_rule_catalog(REGISTRY, bind=_bind_debug)
 
 DEBUG_RULES: Mapping[str, RuleFn] = cast(Mapping[str, RuleFn], rules_view(DEBUG_CATALOG))
 
