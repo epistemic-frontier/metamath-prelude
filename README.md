@@ -8,6 +8,16 @@ It provides the core constants, variables, and a minimal set of foundational sta
 - Package version: `0.0.1`
 - ProofScaffold dependency: `proof-scaffold==0.0.4`
 
+## Installation
+
+This package is published on PyPI: https://pypi.org/project/metamath-prelude/
+
+With `uv`:
+
+```bash
+uv add metamath-prelude
+```
+
 ## What this package contains
 
 - A ProofScaffold `build.py` entrypoint that emits the prelude statements as a linkable unit.
