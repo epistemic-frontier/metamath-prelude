@@ -24,17 +24,20 @@ class Builtins:
 
     These are Const symbols in the interner, not magic.
     """
-    lp: SymbolId     # "("
-    rp: SymbolId     # ")"
-    imp: SymbolId    # "->"
-    neg: SymbolId    # "-."
-    and_: SymbolId   # "/\\"
-    forall: SymbolId # "A."
-    eq: SymbolId     # "="
-    elem: SymbolId   # "e."
-    iff: SymbolId    # "<->"
+
+    lp: SymbolId  # "("
+    rp: SymbolId  # ")"
+    imp: SymbolId  # "->"
+    neg: SymbolId  # "-."
+    and_: SymbolId  # "/\\"
+    forall: SymbolId  # "A."
+    eq: SymbolId  # "="
+    elem: SymbolId  # "e."
+    iff: SymbolId  # "<->"
     exist: SymbolId  # "E."
-    or_: SymbolId    # "\/"
+    or_: SymbolId  # "\/"
+    tru: SymbolId  # "T." (verum / top)
+    fal: SymbolId  # "F." (falsum / bottom)
 
     @staticmethod
     def ensure(
@@ -82,12 +85,33 @@ class Builtins:
         or_ = interner.intern(
             origin_module_id=origin_module_id, local_name="\\/", kind="Const", origin_ref=origin_ref
         )
-        return Builtins(lp=lp, rp=rp, imp=imp, neg=neg, and_=and_, forall=forall, eq=eq, elem=elem, iff=iff, exist=exist, or_=or_)
+        tru = interner.intern(
+            origin_module_id=origin_module_id, local_name="T.", kind="Const", origin_ref=origin_ref
+        )
+        fal = interner.intern(
+            origin_module_id=origin_module_id, local_name="F.", kind="Const", origin_ref=origin_ref
+        )
+        return Builtins(
+            lp=lp,
+            rp=rp,
+            imp=imp,
+            neg=neg,
+            and_=and_,
+            forall=forall,
+            eq=eq,
+            elem=elem,
+            iff=iff,
+            exist=exist,
+            or_=or_,
+            tru=tru,
+            fal=fal,
+        )
 
 
 # -----------------------------------------------------------------------------
 # Constructors
 # -----------------------------------------------------------------------------
+
 
 def wff_atom(sym: SymbolId) -> Wff:
     """Construct an atomic wff from a single symbol token (usually a Var/Const)."""
@@ -119,6 +143,16 @@ def wb(b: Builtins, phi: Wff, psi: Wff) -> Wff:
     return Wff("wff", (b.lp, *phi.tokens, b.iff, *psi.tokens, b.rp))
 
 
+def wtru(b: Builtins) -> Wff:
+    """Construct T. (verum / top)."""
+    return Wff("wff", (b.tru,))
+
+
+def wfal(b: Builtins) -> Wff:
+    """Construct F. (falsum / bottom)."""
+    return Wff("wff", (b.fal,))
+
+
 def forall2(b: Builtins, x: Wff, phi: Wff) -> Wff:
     """Construct A. x phi (binary forall with explicit variable token)."""
     return Wff("wff", (b.forall, *x.tokens, *phi.tokens))
@@ -140,6 +174,7 @@ def elem(b: Builtins, x: Wff, z: Wff) -> Wff:
 # -----------------------------------------------------------------------------
 # Shape matching for implication
 # -----------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class ImpShape:
@@ -339,6 +374,7 @@ def try_parse_forall2(b: Builtins, tokens: Sequence[SymbolId]) -> Forall2Shape |
         return None
     return Forall2Shape(var=x, body=body)
 
+
 __all__ = [
     "GLOBAL_PRELUDE_MODULE_ID",
     "Builtins",
@@ -347,6 +383,9 @@ __all__ = [
     "wn",
     "wa",
     "wo",
+    "wb",
+    "wtru",
+    "wfal",
     "forall2",
     "eq",
     "elem",

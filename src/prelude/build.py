@@ -23,18 +23,42 @@ def build(ctx: BuildContextV2) -> None:
         origin_ref=0,
     )
 
-    ph = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ph", kind="Var", origin_ref=0)
-    ps = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ps", kind="Var", origin_ref=0)
-    ch = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ch", kind="Var", origin_ref=0)
-    th = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="th", kind="Var", origin_ref=0)
-    ta = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ta", kind="Var", origin_ref=0)
-    et = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="et", kind="Var", origin_ref=0)
-    ze = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ze", kind="Var", origin_ref=0)
-    si = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="si", kind="Var", origin_ref=0)
-    rh = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="rh", kind="Var", origin_ref=0)
-    mu = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="mu", kind="Var", origin_ref=0)
-    la = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="la", kind="Var", origin_ref=0)
-    ka = mm.interner.intern(origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ka", kind="Var", origin_ref=0)
+    ph = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ph", kind="Var", origin_ref=0
+    )
+    ps = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ps", kind="Var", origin_ref=0
+    )
+    ch = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ch", kind="Var", origin_ref=0
+    )
+    th = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="th", kind="Var", origin_ref=0
+    )
+    ta = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ta", kind="Var", origin_ref=0
+    )
+    et = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="et", kind="Var", origin_ref=0
+    )
+    ze = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ze", kind="Var", origin_ref=0
+    )
+    si = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="si", kind="Var", origin_ref=0
+    )
+    rh = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="rh", kind="Var", origin_ref=0
+    )
+    mu = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="mu", kind="Var", origin_ref=0
+    )
+    la = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="la", kind="Var", origin_ref=0
+    )
+    ka = mm.interner.intern(
+        origin_module_id=GLOBAL_PRELUDE_MODULE_ID, local_name="ka", kind="Var", origin_ref=0
+    )
 
     wph = mm.f(mm.sym.label("wph"), tc=wff, var=ph)
     wps = mm.f(mm.sym.label("wps"), tc=wff, var=ps)
@@ -51,9 +75,19 @@ def build(ctx: BuildContextV2) -> None:
 
     wn = mm.sym.label("wn")
     wi = mm.sym.label("wi")
+    wo = mm.sym.label("wo")
+    wtru = mm.sym.label("wtru")
+    wfal = mm.sym.label("wfal")
 
     mm.a(wn, tc=wff, expr=[b.neg, ph])
     mm.a(wi, tc=wff, expr=[b.lp, ph, b.imp, ps, b.rp])
+    # Disjunction connective (needed e.g. for pm2.07: ph -> ( ph \/ ph )).
+    mm.a(wo, tc=wff, expr=[b.lp, ph, b.or_, ps, b.rp])
+    # Top/bottom constants (verum / falsum). Nullary wff syntax only; set.mm's
+    # df-tru/df-fal definitions require quantifier+equality machinery that this
+    # propositional prelude does not expose.
+    mm.a(wtru, tc=wff, expr=[b.tru])
+    mm.a(wfal, tc=wff, expr=[b.fal])
 
     with mm.block():
         mm.e(mm.sym.label("idi.1"), tc=provable, expr=[ph])
@@ -93,6 +127,9 @@ def build(ctx: BuildContextV2) -> None:
         wka,
         wn,
         wi,
+        wo,
+        wtru,
+        wfal,
         mm.sym.label("idi"),
         mm.sym.label("a1ii"),
     )

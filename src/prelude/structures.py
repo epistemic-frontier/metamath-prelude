@@ -6,7 +6,7 @@ from skfd.authoring.dsl import Var, symbol
 from skfd.authoring.formula import Wff
 from skfd.authoring.typing import WFF
 
-from .formula import Builtins, imp, wa, wb, wn, wo
+from .formula import Builtins, imp, wa, wb, wfal, wn, wo, wtru
 
 phi = Var("φ")
 psi = Var("ψ")
@@ -40,6 +40,16 @@ def Iff(b: Builtins, args: Sequence[Wff]) -> Wff:
     return wb(b, args[0], args[1])
 
 
+@symbol("T.", 0, (), WFF, aliases=["⊤"])
+def Verum(b: Builtins, args: Sequence[Wff]) -> Wff:
+    return wtru(b)
+
+
+@symbol("F.", 0, (), WFF, aliases=["⊥"])
+def Falsum(b: Builtins, args: Sequence[Wff]) -> Wff:
+    return wfal(b)
+
+
 __all__ = [
     "phi",
     "psi",
@@ -51,4 +61,6 @@ __all__ = [
     "And",
     "Or",
     "Iff",
+    "Verum",
+    "Falsum",
 ]
