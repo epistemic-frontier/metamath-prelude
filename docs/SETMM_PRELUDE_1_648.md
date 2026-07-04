@@ -1,15 +1,23 @@
 # set.mm Prelude (Lines 1–648)
 
-This document records the *source-of-truth mapping* from `set.mm` (first 700 lines) to the current `metamath-prelude` package.
+This document records the historical source mapping from `set.mm` (first 700
+lines) to the current `metamath-prelude` package.
 
 ## Boundary (precise line numbers)
 
 Using [set.mm](file:///Users/mingli/MetaMath/set.mm/set.mm) line numbers:
-- **Prelude**: `1–648` (inclusive)
-- **Logic**: starts at **line 649** (`${ ... ax-mp ... $}` block begins)
+- **Foundation prelude**: the ambient frame in `set.mm` lines `1–648`
+  (constants, variables, floating hypotheses, `wn`, `wi`)
+- **Logic**: starts with ordinary logic content, including the helper theorems
+  `idi` / `a1ii` from the same historical prefix and the later `ax-mp` block.
 
 Rationale:
-- Up to line 648, the file defines *tokens, variables, floating hypotheses, and the recursive syntax of wffs* (`wn`, `wi`) plus a couple of proof-development helper inferences (`idi`, `a1ii`).
+- Up to line 648, the file defines *tokens, variables, floating hypotheses, and
+  the recursive syntax of wffs* (`wn`, `wi`) plus a couple of proof-development
+  helper inferences (`idi`, `a1ii`).
+- ProofScaffold now treats `metamath-prelude` as the global foundation scope.
+  Therefore `idi` and `a1ii` are documented here for source alignment, but are
+  emitted by `metamath-logic`.
 - From line 649 onward, the database introduces the *provability-layer axioms/rules* of propositional calculus (`ax-mp`, `ax-1..ax-3`) which are the natural start of `logic`.
 
 ## What is migrated into `metamath-prelude`
@@ -49,9 +57,9 @@ Source:
 - Helper inferences section: [set.mm:L440-L518](file:///Users/mingli/MetaMath/set.mm/set.mm#L440-L518)
 
 Implementation:
-- Both are emitted as theorems with `tc="|-"` in [build.py](file:///Users/mingli/MetaMath/metamath-prelude/src/prelude/build.py) using the simplest possible proofs:
-  - `idi`: proof is just the hypothesis `idi.1`
-  - `a1ii`: proof is just the hypothesis `a1ii.1` (second hypothesis exists for proof-workflow compatibility, matching set.mm intent)
+- These labels are now emitted by `metamath-logic`, not by
+  `metamath-prelude`. They are ordinary proof helpers with local `$e`
+  hypotheses, not foundation-scope mechanics.
 
 ## Verification expectation (sanity check)
 
@@ -61,5 +69,5 @@ After building `metamath-prelude`, the generated monolith should contain:
 - `$f` declarations for all the above variables
 - `wn $a wff -. ph $.`
 - `wi $a wff ( ph -> ps ) $.`
-- `idi` and `a1ii` as `|-` theorems
-
+- no `wo`, `wtru`, `wfal`, `idi`, or `a1ii` labels; those are emitted by
+  `metamath-logic`

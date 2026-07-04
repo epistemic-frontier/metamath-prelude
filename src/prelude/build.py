@@ -75,28 +75,9 @@ def build(ctx: BuildContextV2) -> None:
 
     wn = mm.sym.label("wn")
     wi = mm.sym.label("wi")
-    wo = mm.sym.label("wo")
-    wtru = mm.sym.label("wtru")
-    wfal = mm.sym.label("wfal")
 
     mm.a(wn, tc=wff, expr=[b.neg, ph])
     mm.a(wi, tc=wff, expr=[b.lp, ph, b.imp, ps, b.rp])
-    # Disjunction connective (needed e.g. for pm2.07: ph -> ( ph \/ ph )).
-    mm.a(wo, tc=wff, expr=[b.lp, ph, b.or_, ps, b.rp])
-    # Top/bottom constants (verum / falsum). Nullary wff syntax only; set.mm's
-    # df-tru/df-fal definitions require quantifier+equality machinery that this
-    # propositional prelude does not expose.
-    mm.a(wtru, tc=wff, expr=[b.tru])
-    mm.a(wfal, tc=wff, expr=[b.fal])
-
-    with mm.block():
-        mm.e(mm.sym.label("idi.1"), tc=provable, expr=[ph])
-        mm.p(mm.sym.label("idi"), tc=provable, expr=[ph], proof=[mm.sym.label("idi.1")])
-
-    with mm.block():
-        mm.e(mm.sym.label("a1ii.1"), tc=provable, expr=[ph])
-        mm.e(mm.sym.label("a1ii.2"), tc=provable, expr=[ps])
-        mm.p(mm.sym.label("a1ii"), tc=provable, expr=[ph], proof=[mm.sym.label("a1ii.1")])
 
     mm.export(
         provable,
@@ -127,9 +108,4 @@ def build(ctx: BuildContextV2) -> None:
         wka,
         wn,
         wi,
-        wo,
-        wtru,
-        wfal,
-        mm.sym.label("idi"),
-        mm.sym.label("a1ii"),
     )
