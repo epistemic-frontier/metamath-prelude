@@ -5,7 +5,7 @@ It provides the core constants, variables, and a minimal set of foundational sta
 
 ## Versioning
 
-- Package version: `0.0.4`
+- Package version: `0.0.5`
 - ProofScaffold dependency: `proof-scaffold>=0.0.8`
 
 ## Installation
@@ -21,7 +21,7 @@ uv add metamath-prelude
 ## What this package contains
 
 - A ProofScaffold `build.py` entrypoint that emits the foundation frame as a linkable unit.
-- Authoring helpers for the Hilbert-style propositional fragment (rule bundle used by downstream proof scripts).
+- Authoring helpers for foundation syntax only (`wi` / `wn`).
 - A documented alignment with the early part of `set.mm`.
 
 ## Verification
@@ -43,5 +43,6 @@ uv run --frozen skfd verify --level 1 metamath-prelude
 ## set.mm alignment
 
 - Foundation boundary: prelude emits only the ambient frame (`wff`, `|-`, schema variables and `$f`, `wn`, `wi`).
-- Logic-owned early helpers such as `wo`, `wtru`, `wfal`, `idi`, and `a1ii` live in `metamath-logic`.
+- Logic-owned helpers and syntax such as `mp`, `wa`, `wo`, `wb`, `wtru`,
+  `wfal`, `idi`, and `a1ii` live in `metamath-logic`.
 - Mapping notes and migrated comments: [`docs/SETMM_PRELUDE_1_648.md`](docs/SETMM_PRELUDE_1_648.md)

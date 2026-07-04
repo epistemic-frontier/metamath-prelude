@@ -15,15 +15,15 @@ from skfd.core.symbols import SymbolId, SymbolInterner
 # Reserved / builtin tokens (by name)
 # -----------------------------------------------------------------------------
 
-# Canonical foundation symbol namespace. Downstream logic packages may call
-# Builtins.ensure(...) to recover the same builtin Const ids, but proof labels
-# still have to come through package exports and linker access checks.
+# Canonical foundation symbol namespace. Downstream packages may call
+# Builtins.ensure(...) to recover the same foundation Const ids, but proof
+# labels still have to come through package exports and linker access checks.
 GLOBAL_PRELUDE_MODULE_ID: str = "__prelude__"
 
 
 @dataclass(frozen=True)
 class Builtins:
-    """Builtin constant tokens used by foundation/propositional authoring.
+    """Builtin constant tokens owned by the foundation prelude.
 
     These are Const symbols in the interner, not magic.
     """
@@ -32,11 +32,6 @@ class Builtins:
     rp: SymbolId  # ")"
     imp: SymbolId  # "->"
     neg: SymbolId  # "-."
-    and_: SymbolId  # "/\\"
-    iff: SymbolId  # "<->"
-    or_: SymbolId  # "\/"
-    tru: SymbolId  # "T." (verum / top)
-    fal: SymbolId  # "F." (falsum / bottom)
 
     @staticmethod
     def ensure(
@@ -66,31 +61,11 @@ class Builtins:
         neg = interner.intern(
             origin_module_id=origin_module_id, local_name="-.", kind="Const", origin_ref=origin_ref
         )
-        and_ = interner.intern(
-            origin_module_id=origin_module_id, local_name="/\\", kind="Const", origin_ref=origin_ref
-        )
-        iff = interner.intern(
-            origin_module_id=origin_module_id, local_name="<->", kind="Const", origin_ref=origin_ref
-        )
-        or_ = interner.intern(
-            origin_module_id=origin_module_id, local_name="\\/", kind="Const", origin_ref=origin_ref
-        )
-        tru = interner.intern(
-            origin_module_id=origin_module_id, local_name="T.", kind="Const", origin_ref=origin_ref
-        )
-        fal = interner.intern(
-            origin_module_id=origin_module_id, local_name="F.", kind="Const", origin_ref=origin_ref
-        )
         return Builtins(
             lp=lp,
             rp=rp,
             imp=imp,
             neg=neg,
-            and_=and_,
-            iff=iff,
-            or_=or_,
-            tru=tru,
-            fal=fal,
         )
 
 
@@ -112,31 +87,6 @@ def imp(b: Builtins, phi: Wff, psi: Wff) -> Wff:
 def wn(b: Builtins, phi: Wff) -> Wff:
     """Construct ~phi."""
     return Wff("wff", (b.neg, *phi.tokens))
-
-
-def wa(b: Builtins, phi: Wff, psi: Wff) -> Wff:
-    r"""Construct ( phi /\ psi )."""
-    return Wff("wff", (b.lp, *phi.tokens, b.and_, *psi.tokens, b.rp))
-
-
-def wo(b: Builtins, phi: Wff, psi: Wff) -> Wff:
-    r"""Construct ( phi \/ psi )."""
-    return Wff("wff", (b.lp, *phi.tokens, b.or_, *psi.tokens, b.rp))
-
-
-def wb(b: Builtins, phi: Wff, psi: Wff) -> Wff:
-    """Construct ( phi <-> psi )."""
-    return Wff("wff", (b.lp, *phi.tokens, b.iff, *psi.tokens, b.rp))
-
-
-def wtru(b: Builtins) -> Wff:
-    """Construct T. (verum / top)."""
-    return Wff("wff", (b.tru,))
-
-
-def wfal(b: Builtins) -> Wff:
-    """Construct F. (falsum / bottom)."""
-    return Wff("wff", (b.fal,))
 
 
 # -----------------------------------------------------------------------------
@@ -307,29 +257,14 @@ def try_parse_wn(b: Builtins, tokens: Sequence[SymbolId]) -> NegShape | None:
     return NegShape(body=body)
 
 
-@dataclass(frozen=True)
-class AndShape:
-    left: TokenSeq
-    right: TokenSeq
-
-
-def try_parse_wa(b: Builtins, tokens: Sequence[SymbolId]) -> AndShape | None:
-    parts = _peg_try_parse_split_binary(b, tokens, op=b.and_)
-    if parts is None:
-        return None
-    left, right = parts
-    return AndShape(left=left, right=right)
-
-
 __all__ = [
     "GLOBAL_PRELUDE_MODULE_ID",
     "Builtins",
+    "ImpShape",
+    "NegShape",
     "wff_atom",
     "imp",
     "wn",
-    "wa",
-    "wo",
-    "wb",
-    "wtru",
-    "wfal",
+    "try_parse_imp",
+    "try_parse_wn",
 ]
