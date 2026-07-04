@@ -15,6 +15,9 @@ from skfd.core.symbols import SymbolId, SymbolInterner
 # Reserved / builtin tokens (by name)
 # -----------------------------------------------------------------------------
 
+# Canonical foundation symbol namespace. Downstream logic packages may call
+# Builtins.ensure(...) to recover the same builtin Const ids, but proof labels
+# still have to come through package exports and linker access checks.
 GLOBAL_PRELUDE_MODULE_ID: str = "__prelude__"
 
 
@@ -46,11 +49,14 @@ class Builtins:
         origin_module_id: str = GLOBAL_PRELUDE_MODULE_ID,
         origin_ref: Any = None,
     ) -> Builtins:
-        """Intern builtin tokens.
+        """Intern canonical foundation vocabulary tokens.
 
         IMPORTANT:
-        - Use a fixed origin_module_id by default so builtin tokens are global-stable.
-        - If you override origin_module_id, you are intentionally creating a distinct builtin set.
+        - The default namespace is the global foundation namespace.
+        - This is for vocabulary SymbolId identity only; it is not a dependency
+          import mechanism for theorem labels.
+        - If you override origin_module_id, you are intentionally creating a
+          distinct builtin set.
         """
         lp = interner.intern(
             origin_module_id=origin_module_id, local_name="(", kind="Const", origin_ref=origin_ref

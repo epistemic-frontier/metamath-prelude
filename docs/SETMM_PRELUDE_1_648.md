@@ -29,6 +29,10 @@ Source:
 Implementation:
 - Builtin token interning is centralized in [formula.py](file:///Users/mingli/MetaMath/metamath-prelude/src/prelude/formula.py) (`Builtins.ensure`).
 - `wff` and `|-` are explicitly interned as global-stable Const symbols in [build.py](file:///Users/mingli/MetaMath/metamath-prelude/src/prelude/build.py).
+- `GLOBAL_PRELUDE_MODULE_ID="__prelude__"` is the canonical foundation symbol
+  namespace. Downstream packages may reuse it through `Builtins.ensure(...)` for
+  stable vocabulary `SymbolId`s; theorem labels and proof dependencies still
+  flow through package exports and linker checks.
 
 Note:
 - set.mm also declares typographical constants `&` and `=>` ([set.mm:L388-L393](file:///Users/mingli/MetaMath/set.mm/set.mm#L388-L393)). These are *comment-only* symbols in set.mm; we preserve them in documentation, but we do not currently force emission of unused `$c` declarations in generated `.mm`.
