@@ -33,6 +33,8 @@ Implementation:
   namespace. Downstream packages may reuse it through `Builtins.ensure(...)` for
   stable vocabulary `SymbolId`s; theorem labels and proof dependencies still
   flow through package exports and linker checks.
+- Predicate/set-theory tokens such as `A.`, `E.`, `=`, and `e.` are not
+  prelude builtins. They are owned by later predicate/set-theory packages.
 
 Note:
 - set.mm also declares typographical constants `&` and `=>` ([set.mm:L388-L393](file:///Users/mingli/MetaMath/set.mm/set.mm#L388-L393)). These are *comment-only* symbols in set.mm; we preserve them in documentation, but we do not currently force emission of unused `$c` declarations in generated `.mm`.

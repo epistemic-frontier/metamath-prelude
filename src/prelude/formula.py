@@ -23,7 +23,7 @@ GLOBAL_PRELUDE_MODULE_ID: str = "__prelude__"
 
 @dataclass(frozen=True)
 class Builtins:
-    """Builtin constant tokens used by early propositional logic.
+    """Builtin constant tokens used by foundation/propositional authoring.
 
     These are Const symbols in the interner, not magic.
     """
@@ -33,11 +33,7 @@ class Builtins:
     imp: SymbolId  # "->"
     neg: SymbolId  # "-."
     and_: SymbolId  # "/\\"
-    forall: SymbolId  # "A."
-    eq: SymbolId  # "="
-    elem: SymbolId  # "e."
     iff: SymbolId  # "<->"
-    exist: SymbolId  # "E."
     or_: SymbolId  # "\/"
     tru: SymbolId  # "T." (verum / top)
     fal: SymbolId  # "F." (falsum / bottom)
@@ -73,20 +69,8 @@ class Builtins:
         and_ = interner.intern(
             origin_module_id=origin_module_id, local_name="/\\", kind="Const", origin_ref=origin_ref
         )
-        forall = interner.intern(
-            origin_module_id=origin_module_id, local_name="A.", kind="Const", origin_ref=origin_ref
-        )
-        eq = interner.intern(
-            origin_module_id=origin_module_id, local_name="=", kind="Const", origin_ref=origin_ref
-        )
-        elem = interner.intern(
-            origin_module_id=origin_module_id, local_name="e.", kind="Const", origin_ref=origin_ref
-        )
         iff = interner.intern(
             origin_module_id=origin_module_id, local_name="<->", kind="Const", origin_ref=origin_ref
-        )
-        exist = interner.intern(
-            origin_module_id=origin_module_id, local_name="E.", kind="Const", origin_ref=origin_ref
         )
         or_ = interner.intern(
             origin_module_id=origin_module_id, local_name="\\/", kind="Const", origin_ref=origin_ref
@@ -103,11 +87,7 @@ class Builtins:
             imp=imp,
             neg=neg,
             and_=and_,
-            forall=forall,
-            eq=eq,
-            elem=elem,
             iff=iff,
-            exist=exist,
             or_=or_,
             tru=tru,
             fal=fal,
@@ -157,24 +137,6 @@ def wtru(b: Builtins) -> Wff:
 def wfal(b: Builtins) -> Wff:
     """Construct F. (falsum / bottom)."""
     return Wff("wff", (b.fal,))
-
-
-def forall2(b: Builtins, x: Wff, phi: Wff) -> Wff:
-    """Construct A. x phi (binary forall with explicit variable token)."""
-    return Wff("wff", (b.forall, *x.tokens, *phi.tokens))
-
-
-def exist(b: Builtins, x: Wff, phi: Wff) -> Wff:
-    """Construct E. x phi."""
-    return Wff("wff", (b.exist, *x.tokens, *phi.tokens))
-
-
-def eq(b: Builtins, x: Wff, y: Wff) -> Wff:
-    return Wff("wff", (*x.tokens, b.eq, *y.tokens))
-
-
-def elem(b: Builtins, x: Wff, z: Wff) -> Wff:
-    return Wff("wff", (*x.tokens, b.elem, *z.tokens))
 
 
 # -----------------------------------------------------------------------------
@@ -359,28 +321,6 @@ def try_parse_wa(b: Builtins, tokens: Sequence[SymbolId]) -> AndShape | None:
     return AndShape(left=left, right=right)
 
 
-@dataclass(frozen=True)
-class Forall2Shape:
-    var: SymbolId
-    body: TokenSeq
-
-
-def try_parse_forall2(b: Builtins, tokens: Sequence[SymbolId]) -> Forall2Shape | None:
-    toks = tuple(tokens)
-    if len(toks) < 3 or toks[0] != b.forall:
-        return None
-    x = toks[1]
-    ts: TokenStream[TokenSeq] = TokenStream(text="", tokens=_peg_tokenize(b, toks[2:]))
-    bal, _ = _peg_bal(b)
-    out = bal(ts, 0)
-    if out is None:
-        return None
-    body, j = out
-    if not body or ts.peek(j).type != "EOF":
-        return None
-    return Forall2Shape(var=x, body=body)
-
-
 __all__ = [
     "GLOBAL_PRELUDE_MODULE_ID",
     "Builtins",
@@ -392,7 +332,4 @@ __all__ = [
     "wb",
     "wtru",
     "wfal",
-    "forall2",
-    "eq",
-    "elem",
 ]
