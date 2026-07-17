@@ -35,9 +35,30 @@ def test_builtins_are_foundation_only() -> None:
 
 
 def test_hilbert_rules_are_foundation_syntax_only() -> None:
-    from prelude.hilbert_rules import DEBUG_RULES
+    from prelude.hilbert_rules import DEBUG_RULES, WI_SIG, WN_SIG
+    from prelude.language import IMP, LANGUAGE, NOT
+    from prelude.metamath_binding import SETMM_PRELUDE_BINDING
 
     assert set(DEBUG_RULES) == {"wi", "wn"}
+    assert (WI_SIG.in_sorts, WI_SIG.out_sort) == (("wff", "wff"), "wff")
+    assert (WN_SIG.in_sorts, WN_SIG.out_sort) == (("wff",), "wff")
+    assert WI_SIG.arity == len(LANGUAGE.constructors[IMP].inputs)
+    assert WN_SIG.arity == len(LANGUAGE.constructors[NOT].inputs)
+    assert set(DEBUG_RULES) == {
+        SETMM_PRELUDE_BINDING.formations[IMP].syntax_assertion_label,
+        SETMM_PRELUDE_BINDING.formations[NOT].syntax_assertion_label,
+    }
+
+
+def test_legacy_authoring_symbols_are_projected_from_semantic_declarations() -> None:
+    from skfd.authoring.dsl import DEFAULT_REQUIRE
+
+    from prelude.structures import Imp, Not
+
+    assert (Imp.name, Imp.arity) == ("->", 2)
+    assert (Not.name, Not.arity) == ("-.", 1)
+    assert DEFAULT_REQUIRE.spec_for(Imp) is not None
+    assert DEFAULT_REQUIRE.spec_for(Not) is not None
 
 
 def test_semantic_language_is_separate_from_notation_and_setmm_binding() -> None:
@@ -47,7 +68,7 @@ def test_semantic_language_is_separate_from_notation_and_setmm_binding() -> None
     from skfd.authoring.term import VariableRef
     from skfd.core.symbols import SymbolInterner
 
-    from prelude.formula import Builtins, imp, wn
+    from prelude.formula import Builtins, imp, try_parse_imp, try_parse_wn, wn
     from prelude.language import IMP, LANGUAGE, NOT, WFF_VARIABLE, Imp, Not
     from prelude.metamath_binding import SETMM_PRELUDE_BINDING
     from prelude.notation import PRELUDE_UNICODE_NOTATION
@@ -96,3 +117,10 @@ def test_semantic_language_is_separate_from_notation_and_setmm_binding() -> None
         atom.token.local_name if isinstance(atom, LiteralAtom) else atom.variable.local_key
         for atom in atoms
     ]
+    implication_shape = try_parse_imp(builtins, legacy.tokens)
+    assert implication_shape is not None
+    assert implication_shape.phi == wn(builtins, Wff("wff", (phi_token,))).tokens
+    assert implication_shape.psi == (psi_token,)
+    negation_shape = try_parse_wn(builtins, implication_shape.phi)
+    assert negation_shape is not None
+    assert negation_shape.body == (phi_token,)

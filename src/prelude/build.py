@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from skfd.api_v2 import BuildContextV2
+from skfd.authoring.formula import Wff
 
-from prelude.formula import Builtins, GLOBAL_PRELUDE_MODULE_ID
+from prelude.formula import Builtins, GLOBAL_PRELUDE_MODULE_ID, imp, wn
+from prelude.metamath_binding import SETMM_WFF_TOKEN, SETMM_WI_LABEL, SETMM_WN_LABEL
 
 
 def build(ctx: BuildContextV2) -> None:
@@ -12,7 +14,7 @@ def build(ctx: BuildContextV2) -> None:
 
     wff = mm.interner.intern(
         origin_module_id=GLOBAL_PRELUDE_MODULE_ID,
-        local_name="wff",
+        local_name=SETMM_WFF_TOKEN.local_name,
         kind="Const",
         origin_ref=0,
     )
@@ -73,11 +75,11 @@ def build(ctx: BuildContextV2) -> None:
     wla = mm.f(mm.sym.label("wla"), tc=wff, var=la)
     wka = mm.f(mm.sym.label("wka"), tc=wff, var=ka)
 
-    wn = mm.sym.label("wn")
-    wi = mm.sym.label("wi")
+    wn_label = mm.sym.label(SETMM_WN_LABEL)
+    wi_label = mm.sym.label(SETMM_WI_LABEL)
 
-    mm.a(wn, tc=wff, expr=[b.neg, ph])
-    mm.a(wi, tc=wff, expr=[b.lp, ph, b.imp, ps, b.rp])
+    mm.a(wn_label, tc=wff, expr=list(wn(b, Wff("wff", (ph,))).tokens))
+    mm.a(wi_label, tc=wff, expr=list(imp(b, Wff("wff", (ph,)), Wff("wff", (ps,))).tokens))
 
     mm.export(
         provable,
@@ -106,6 +108,6 @@ def build(ctx: BuildContextV2) -> None:
         wmu,
         wla,
         wka,
-        wn,
-        wi,
+        wn_label,
+        wi_label,
     )

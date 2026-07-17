@@ -5,11 +5,27 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import (
     Any,
+    cast,
 )
 
 from skfd.authoring.formula import TokenSeq, Wff
+from skfd.authoring.legacy_metamath import (
+    build_legacy_formula,
+    legacy_binary_formation,
+    legacy_prefix_formation,
+)
+from skfd.authoring.metamath_language import TokenRef
 from skfd.core.peg import Rule, TokenStream
 from skfd.core.symbols import SymbolId, SymbolInterner
+
+from .language import IMP, NOT, WFF
+from .metamath_binding import (
+    SETMM_IMP_TOKEN,
+    SETMM_LPAREN_TOKEN,
+    SETMM_NEG_TOKEN,
+    SETMM_PRELUDE_BINDING,
+    SETMM_RPAREN_TOKEN,
+)
 
 # -----------------------------------------------------------------------------
 # Reserved / builtin tokens (by name)
@@ -50,16 +66,28 @@ class Builtins:
           distinct builtin set.
         """
         lp = interner.intern(
-            origin_module_id=origin_module_id, local_name="(", kind="Const", origin_ref=origin_ref
+            origin_module_id=origin_module_id,
+            local_name=SETMM_LPAREN_TOKEN.local_name,
+            kind="Const",
+            origin_ref=origin_ref,
         )
         rp = interner.intern(
-            origin_module_id=origin_module_id, local_name=")", kind="Const", origin_ref=origin_ref
+            origin_module_id=origin_module_id,
+            local_name=SETMM_RPAREN_TOKEN.local_name,
+            kind="Const",
+            origin_ref=origin_ref,
         )
         imp = interner.intern(
-            origin_module_id=origin_module_id, local_name="->", kind="Const", origin_ref=origin_ref
+            origin_module_id=origin_module_id,
+            local_name=SETMM_IMP_TOKEN.local_name,
+            kind="Const",
+            origin_ref=origin_ref,
         )
         neg = interner.intern(
-            origin_module_id=origin_module_id, local_name="-.", kind="Const", origin_ref=origin_ref
+            origin_module_id=origin_module_id,
+            local_name=SETMM_NEG_TOKEN.local_name,
+            kind="Const",
+            origin_ref=origin_ref,
         )
         return Builtins(
             lp=lp,
@@ -67,6 +95,15 @@ class Builtins:
             imp=imp,
             neg=neg,
         )
+
+    def token_symbols(self) -> dict[TokenRef, SymbolId]:
+        """Return the explicit runtime realization of the Prelude token vocabulary."""
+        return {
+            SETMM_LPAREN_TOKEN: self.lp,
+            SETMM_RPAREN_TOKEN: self.rp,
+            SETMM_IMP_TOKEN: self.imp,
+            SETMM_NEG_TOKEN: self.neg,
+        }
 
 
 # -----------------------------------------------------------------------------
@@ -81,12 +118,26 @@ def wff_atom(sym: SymbolId) -> Wff:
 
 def imp(b: Builtins, phi: Wff, psi: Wff) -> Wff:
     """Construct ( phi -> psi ) at token level."""
-    return Wff("wff", (b.lp, *phi.tokens, b.imp, *psi.tokens, b.rp))
+    formula = build_legacy_formula(
+        SETMM_PRELUDE_BINDING,
+        IMP,
+        (phi, psi),
+        token_symbols=b.token_symbols(),
+        legacy_sorts={WFF: "wff"},
+    )
+    return cast(Wff, formula)
 
 
 def wn(b: Builtins, phi: Wff) -> Wff:
     """Construct ~phi."""
-    return Wff("wff", (b.neg, *phi.tokens))
+    formula = build_legacy_formula(
+        SETMM_PRELUDE_BINDING,
+        NOT,
+        (phi,),
+        token_symbols=b.token_symbols(),
+        legacy_sorts={WFF: "wff"},
+    )
+    return cast(Wff, formula)
 
 
 # -----------------------------------------------------------------------------
@@ -107,12 +158,17 @@ class _Tok:
     pos: int
 
 
-def _peg_tokenize(b: Builtins, tokens: Sequence[SymbolId]) -> list[_Tok]:
+def _peg_tokenize(
+    tokens: Sequence[SymbolId],
+    *,
+    left_delimiter: SymbolId,
+    right_delimiter: SymbolId,
+) -> list[_Tok]:
     out: list[_Tok] = []
     for i, t in enumerate(tokens):
-        if t == b.lp:
+        if t == left_delimiter:
             out.append(_Tok("LPAREN", t, i))
-        elif t == b.rp:
+        elif t == right_delimiter:
             out.append(_Tok("RPAREN", t, i))
         else:
             out.append(_Tok("SYM", t, i))
@@ -121,7 +177,9 @@ def _peg_tokenize(b: Builtins, tokens: Sequence[SymbolId]) -> list[_Tok]:
 
 
 def _peg_bal(
-    b: Builtins,
+    *,
+    left_delimiter: SymbolId,
+    right_delimiter: SymbolId,
 ) -> tuple[Rule[TokenSeq], Rule[TokenSeq]]:
     def sym_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
         tok = s.peek(i)
@@ -142,7 +200,7 @@ def _peg_bal(
         close = s.peek(j)
         if close.type != "RPAREN":
             return None
-        return (b.lp, *inner, b.rp), j + 1
+        return (left_delimiter, *inner, right_delimiter), j + 1
 
     group = Rule("bal.group", group_fn)
 
@@ -169,10 +227,24 @@ def _peg_bal(
 
 
 def _peg_try_parse_split_binary(
-    b: Builtins, tokens: Sequence[SymbolId], *, op: SymbolId
+    tokens: Sequence[SymbolId],
+    *,
+    left_delimiter: SymbolId,
+    op: SymbolId,
+    right_delimiter: SymbolId,
 ) -> tuple[TokenSeq, TokenSeq] | None:
-    ts: TokenStream[TokenSeq] = TokenStream(text="", tokens=_peg_tokenize(b, tokens))
-    bal, group = _peg_bal(b)
+    ts: TokenStream[TokenSeq] = TokenStream(
+        text="",
+        tokens=_peg_tokenize(
+            tokens,
+            left_delimiter=left_delimiter,
+            right_delimiter=right_delimiter,
+        ),
+    )
+    bal, group = _peg_bal(
+        left_delimiter=left_delimiter,
+        right_delimiter=right_delimiter,
+    )
 
     def sym_any_fn(s: TokenStream, i: int) -> tuple[TokenSeq, int] | None:
         tok = s.peek(i)
@@ -230,7 +302,14 @@ def _peg_try_parse_split_binary(
 
 
 def try_parse_imp(b: Builtins, tokens: Sequence[SymbolId]) -> ImpShape | None:
-    parts = _peg_try_parse_split_binary(b, tokens, op=b.imp)
+    formation = legacy_binary_formation(SETMM_PRELUDE_BINDING, IMP)
+    symbols = b.token_symbols()
+    parts = _peg_try_parse_split_binary(
+        tokens,
+        left_delimiter=symbols[formation.left_delimiter],
+        op=symbols[formation.operator],
+        right_delimiter=symbols[formation.right_delimiter],
+    )
     if parts is None:
         return None
     left, right = parts
@@ -243,11 +322,27 @@ class NegShape:
 
 
 def try_parse_wn(b: Builtins, tokens: Sequence[SymbolId]) -> NegShape | None:
+    negation = legacy_prefix_formation(SETMM_PRELUDE_BINDING, NOT)
+    implication = legacy_binary_formation(SETMM_PRELUDE_BINDING, IMP)
+    symbols = b.token_symbols()
+    prefix = symbols[negation.prefix]
     toks = tuple(tokens)
-    if len(toks) < 2 or toks[0] != b.neg:
+    if len(toks) < 2 or toks[0] != prefix:
         return None
-    ts: TokenStream[TokenSeq] = TokenStream(text="", tokens=_peg_tokenize(b, toks[1:]))
-    bal, _ = _peg_bal(b)
+    left_delimiter = symbols[implication.left_delimiter]
+    right_delimiter = symbols[implication.right_delimiter]
+    ts: TokenStream[TokenSeq] = TokenStream(
+        text="",
+        tokens=_peg_tokenize(
+            toks[1:],
+            left_delimiter=left_delimiter,
+            right_delimiter=right_delimiter,
+        ),
+    )
+    bal, _ = _peg_bal(
+        left_delimiter=left_delimiter,
+        right_delimiter=right_delimiter,
+    )
     out = bal(ts, 0)
     if out is None:
         return None

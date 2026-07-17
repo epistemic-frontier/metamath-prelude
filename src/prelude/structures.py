@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from skfd.authoring.dsl import BuilderFn, Constructor, Var, symbol
+from skfd.authoring.ids import ConstructorId
+from skfd.authoring.legacy_metamath import legacy_symbol_spec
 
-from skfd.authoring.dsl import Var, symbol
-from skfd.authoring.formula import Wff
-from skfd.authoring.typing import WFF
-
-from .formula import Builtins, imp, wn
+from .formula import imp, wn
+from .language import IMP, NOT, WFF
+from .metamath_binding import SETMM_PRELUDE_BINDING
+from .notation import PRELUDE_UNICODE_NOTATION
 
 phi = Var("φ")
 psi = Var("ψ")
@@ -15,14 +16,32 @@ th = Var("θ")
 ta = Var("τ")
 
 
-@symbol("->", 2, (WFF, WFF), WFF, op="rshift", precedence=20, assoc="right", aliases=["→", "⇒"])
-def Imp(b: Builtins, args: Sequence[Wff]) -> Wff:
-    return imp(b, args[0], args[1])
+def _legacy_symbol(
+    constructor: ConstructorId,
+    builder: BuilderFn,
+    *,
+    op: str,
+) -> Constructor:
+    spec = legacy_symbol_spec(
+        SETMM_PRELUDE_BINDING,
+        PRELUDE_UNICODE_NOTATION,
+        constructor,
+        legacy_sorts={WFF: "wff"},
+    )
+    return symbol(
+        spec.name,
+        spec.arity,
+        spec.in_sorts,
+        spec.out_sort,
+        op=op,
+        precedence=spec.precedence,
+        assoc=spec.associativity,
+        aliases=spec.aliases,
+    )(builder)
 
 
-@symbol("-.", 1, (WFF,), WFF, op="invert", precedence=30, assoc="right", aliases=["¬", "~"])
-def Not(b: Builtins, args: Sequence[Wff]) -> Wff:
-    return wn(b, args[0])
+Imp = _legacy_symbol(IMP, lambda b, args: imp(b, args[0], args[1]), op="rshift")
+Not = _legacy_symbol(NOT, lambda b, args: wn(b, args[0]), op="invert")
 
 
 __all__ = [

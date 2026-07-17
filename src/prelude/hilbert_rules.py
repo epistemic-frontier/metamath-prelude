@@ -6,6 +6,7 @@ from typing import TypeAlias, cast
 
 from prelude.formula import Builtins, imp, wn
 from skfd.authoring.formula import Wff
+from skfd.authoring.ids import ConstructorId
 from skfd.authoring.rules import (
     RuleBundle,
     RuleRegistry,
@@ -22,15 +23,32 @@ from skfd.authoring.typing import (
     require_hyp_sort_typed,
 )
 
+from .language import IMP, LANGUAGE, NOT, WFF as SEMANTIC_WFF
+from .metamath_binding import SETMM_WI_LABEL, SETMM_WN_LABEL
+
 RuleFn: TypeAlias = Callable[..., Wff]
 
 REGISTRY = RuleRegistry()
 
-@rule(label="wi", kind="axiom", sig=RuleSig(in_sorts=(WFF, WFF), out_sort=WFF), registry=REGISTRY)
+
+def _formation_sig(constructor: ConstructorId) -> RuleSig:
+    declaration = LANGUAGE.constructors[constructor]
+    legacy_sorts = {SEMANTIC_WFF: WFF}
+    return RuleSig(
+        in_sorts=tuple(legacy_sorts[item] for item in declaration.inputs),
+        out_sort=legacy_sorts[declaration.output],
+    )
+
+
+WI_SIG = _formation_sig(IMP)
+WN_SIG = _formation_sig(NOT)
+
+
+@rule(label=SETMM_WI_LABEL, kind="axiom", sig=WI_SIG, registry=REGISTRY)
 @dataclass(frozen=True)
 class Wi:
-    label: str = "wi"
-    sig: RuleSig = RuleSig(in_sorts=(WFF, WFF), out_sort=WFF)
+    label: str = SETMM_WI_LABEL
+    sig: RuleSig = WI_SIG
     b: Builtins | None = None
 
     def __call__(self, hphi: HypWff, hpsi: HypWff) -> Wff:
@@ -41,11 +59,11 @@ class Wi:
         return imp(self.b, hphi.body, hpsi.body)
 
 
-@rule(label="wn", kind="axiom", sig=RuleSig(in_sorts=(WFF,), out_sort=WFF), registry=REGISTRY)
+@rule(label=SETMM_WN_LABEL, kind="axiom", sig=WN_SIG, registry=REGISTRY)
 @dataclass(frozen=True)
 class Wn:
-    label: str = "wn"
-    sig: RuleSig = RuleSig(in_sorts=(WFF,), out_sort=WFF)
+    label: str = SETMM_WN_LABEL
+    sig: RuleSig = WN_SIG
     b: Builtins | None = None
 
     def __call__(self, hphi: HypWff) -> Wff:
