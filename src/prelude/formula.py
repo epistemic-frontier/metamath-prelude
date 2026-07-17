@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import (
     Any,
+    Protocol,
     cast,
 )
 
@@ -35,6 +36,20 @@ from .metamath_binding import (
 # Builtins.ensure(...) to recover the same foundation Const ids, but proof
 # labels still have to come through package exports and linker access checks.
 GLOBAL_PRELUDE_MODULE_ID: str = "__prelude__"
+
+
+class _PreludeTokens(Protocol):
+    @property
+    def lp(self) -> SymbolId: ...
+
+    @property
+    def rp(self) -> SymbolId: ...
+
+    @property
+    def imp(self) -> SymbolId: ...
+
+    @property
+    def neg(self) -> SymbolId: ...
 
 
 @dataclass(frozen=True)
@@ -98,12 +113,17 @@ class Builtins:
 
     def token_symbols(self) -> dict[TokenRef, SymbolId]:
         """Return the explicit runtime realization of the Prelude token vocabulary."""
-        return {
-            SETMM_LPAREN_TOKEN: self.lp,
-            SETMM_RPAREN_TOKEN: self.rp,
-            SETMM_IMP_TOKEN: self.imp,
-            SETMM_NEG_TOKEN: self.neg,
-        }
+        return _token_symbols(self)
+
+
+def _token_symbols(b: _PreludeTokens) -> dict[TokenRef, SymbolId]:
+    """Project Prelude tokens from structurally compatible downstream builtins."""
+    return {
+        SETMM_LPAREN_TOKEN: b.lp,
+        SETMM_RPAREN_TOKEN: b.rp,
+        SETMM_IMP_TOKEN: b.imp,
+        SETMM_NEG_TOKEN: b.neg,
+    }
 
 
 # -----------------------------------------------------------------------------
@@ -116,25 +136,25 @@ def wff_atom(sym: SymbolId) -> Wff:
     return Wff("wff", (sym,))
 
 
-def imp(b: Builtins, phi: Wff, psi: Wff) -> Wff:
+def imp(b: _PreludeTokens, phi: Wff, psi: Wff) -> Wff:
     """Construct ( phi -> psi ) at token level."""
     formula = build_legacy_formula(
         SETMM_PRELUDE_BINDING,
         IMP,
         (phi, psi),
-        token_symbols=b.token_symbols(),
+        token_symbols=_token_symbols(b),
         legacy_sorts={WFF: "wff"},
     )
     return cast(Wff, formula)
 
 
-def wn(b: Builtins, phi: Wff) -> Wff:
+def wn(b: _PreludeTokens, phi: Wff) -> Wff:
     """Construct ~phi."""
     formula = build_legacy_formula(
         SETMM_PRELUDE_BINDING,
         NOT,
         (phi,),
-        token_symbols=b.token_symbols(),
+        token_symbols=_token_symbols(b),
         legacy_sorts={WFF: "wff"},
     )
     return cast(Wff, formula)
@@ -301,9 +321,9 @@ def _peg_try_parse_split_binary(
     return left, right
 
 
-def try_parse_imp(b: Builtins, tokens: Sequence[SymbolId]) -> ImpShape | None:
+def try_parse_imp(b: _PreludeTokens, tokens: Sequence[SymbolId]) -> ImpShape | None:
     formation = legacy_binary_formation(SETMM_PRELUDE_BINDING, IMP)
-    symbols = b.token_symbols()
+    symbols = _token_symbols(b)
     parts = _peg_try_parse_split_binary(
         tokens,
         left_delimiter=symbols[formation.left_delimiter],
@@ -321,10 +341,10 @@ class NegShape:
     body: TokenSeq
 
 
-def try_parse_wn(b: Builtins, tokens: Sequence[SymbolId]) -> NegShape | None:
+def try_parse_wn(b: _PreludeTokens, tokens: Sequence[SymbolId]) -> NegShape | None:
     negation = legacy_prefix_formation(SETMM_PRELUDE_BINDING, NOT)
     implication = legacy_binary_formation(SETMM_PRELUDE_BINDING, IMP)
-    symbols = b.token_symbols()
+    symbols = _token_symbols(b)
     prefix = symbols[negation.prefix]
     toks = tuple(tokens)
     if len(toks) < 2 or toks[0] != prefix:
