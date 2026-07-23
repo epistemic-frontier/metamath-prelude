@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "metamath-prelude"
-version = "0.0.5"
+version = "0.0.6"
 description = "Prelude definitions for Metamath projects"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
@@ -35,7 +35,7 @@ maintainers = [
 ]
 
 dependencies = [
-    "proof-scaffold>=0.0.8",
+    "proof-scaffold==0.0.11",
 ]
 
 [project.urls]
@@ -49,6 +49,9 @@ dev = [
     "pytest>=8",
     "ruff>=0.6",
 ]
+
+[tool.uv.sources]
+proof-scaffold = { git = "https://github.com/epistemic-frontier/proof-scaffold.git", rev = "5694462ed835f57db52f117f7ccdc82c6a1d8d0e" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

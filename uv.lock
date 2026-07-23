@@ -107,7 +107,7 @@ wheels = [
 
 [[package]]
 name = "metamath-prelude"
-version = "0.0.5"
+version = "0.0.6"
 source = { editable = "." }
 dependencies = [
     { name = "proof-scaffold" },
@@ -121,7 +121,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "proof-scaffold", specifier = ">=0.0.8" }]
+requires-dist = [{ name = "proof-scaffold", git = "https://github.com/epistemic-frontier/proof-scaffold.git?rev=5694462ed835f57db52f117f7ccdc82c6a1d8d0e" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -214,12 +214,8 @@ wheels = [
 
 [[package]]
 name = "proof-scaffold"
-version = "0.0.8"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f0/f7/32eb96575038a36db94b2ec6119f40faa4250798e99e5cdfd99f22765471/proof_scaffold-0.0.8.tar.gz", hash = "sha256:3155fbd818d664e555567fdaa01aa639bf87a487cff347af7491815595fc9261", size = 99449, upload-time = "2026-07-04T04:57:08.707Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/0e/e3db77059b43c35f71df9e7a71044726be7ca3f613c1ae4557f021623217/proof_scaffold-0.0.8-py3-none-any.whl", hash = "sha256:4d80ccf499e716461c19e53334a5ab66ab3df7ad601d40d36c6be49f7b964bf7", size = 115184, upload-time = "2026-07-04T04:57:07.05Z" },
-]
+version = "0.0.11"
+source = { git = "https://github.com/epistemic-frontier/proof-scaffold.git?rev=5694462ed835f57db52f117f7ccdc82c6a1d8d0e#5694462ed835f57db52f117f7ccdc82c6a1d8d0e" }
 
 [[package]]
 name = "pygments"
